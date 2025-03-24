@@ -27,19 +27,21 @@ public class ProductService {
 		return productRepository.save(product);
 	}
 	
-	public Product getProduct(Integer id) {
-		return productRepository.findById(id).get();
+	public Product getProduct(Integer id) throws Exception {
+		return productRepository.findById(id)
+				.orElseThrow(() -> new Exception("Product does not exists"));
 	}
 	
-	public Product updateProduct(Product product, Integer id){
+	public Product updateProduct(Product product, Integer id) throws Exception{
 		Product updatedroduct = getProduct(id);
-		
-		return productRepository.save(updatedroduct);
+		product.setId(updatedroduct.getId());
+		return productRepository.save(product);
 	}
 	
-	public void deleteProduct(Integer id) {
+	public void deleteProduct(Integer id) throws Exception {
+		Product p = getProduct(id);
 		
-		productRepository.deleteById(id);
+		productRepository.deleteById(p.getId());
 	}
 	
 	

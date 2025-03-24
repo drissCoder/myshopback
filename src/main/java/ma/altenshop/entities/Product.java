@@ -2,12 +2,17 @@ package ma.altenshop.entities;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import ma.altenshop.enums.InventoryStatus;
 
 @Entity
@@ -30,12 +35,19 @@ public class Product {
 	  private Integer rating;
 	  private LocalDate createdAt;
 	  private LocalDate updatedAt;
+	  
+	 
+	  @ManyToOne(cascade = CascadeType.ALL)
+	  @JsonIgnore
+	  private Panier panier; 
+	  
+	  
 	public Product() {
 		super();
 	}
 	public Product(String code, String name, String description, String image, String category, Double price,
 			Integer quantity, String internalReference, Integer shellId, InventoryStatus inventoryStatus,
-			Integer rating) {
+			Integer rating, Panier panier) {
 		super();
 		this.code = code;
 		this.name = name;
@@ -48,6 +60,7 @@ public class Product {
 		this.shellId = shellId;
 		this.inventoryStatus = inventoryStatus;
 		this.rating = rating;
+		this.panier = panier;
 	}
 	public Integer getId() {
 		return id;
@@ -120,6 +133,12 @@ public class Product {
 	}
 	public void setRating(Integer rating) {
 		this.rating = rating;
-	}  
+	}
+	public Panier getPanier() {
+		return panier;
+	}
+	public void setPanier(Panier panier) {
+		this.panier = panier;
+	}
 }
 

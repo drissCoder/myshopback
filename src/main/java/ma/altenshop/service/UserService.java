@@ -1,5 +1,7 @@
 package ma.altenshop.service;
 
+import java.util.Optional;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -37,6 +39,11 @@ public class UserService {
 				|| accountRequest.getFirstname() == null || accountRequest.getFirstname() == null) {
 			throw new RuntimeException("Field cannot be null");
 		}
+		
+		Optional<User> userOptional = userRepository.findByEmail(accountRequest.getEmail());
+		if(userOptional.isPresent())
+			throw new RuntimeException("User already exists");
+		
 		User user = new User();
 		user.setEmail(accountRequest.getEmail());
 		user.setFirstname(accountRequest.getFirstname());

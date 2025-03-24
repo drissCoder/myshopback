@@ -1,5 +1,9 @@
 package ma.altenshop.service;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,17 +38,17 @@ public class PanierService {
 		if(panierItemRequest.getIdProduct() != null) {
 			product = productRepository.findById(panierItemRequest.getIdProduct())
 								.orElseThrow(() -> new Exception("Product not exists"));
+		}else {
+			throw new Exception("Product does not exists");
 		}
 	
-		if(panierItemRequest.getIdPanier() == null) {
-			panier = new Panier();
-		}else {
-			panier = panierRepository.findById(panierItemRequest.getIdPanier())
+		panier = panierRepository.findById(panierItemRequest.getIdPanier())
 									.orElseThrow(() -> new Exception("Panier not exists"));
-		}
-		panier.getProducts().add(product);
-		panier = panierRepository.saveAndFlush(panier);
 		
+
+
+		product.setPanier(panier);
+
 		return panier;
 	}
 	
@@ -53,9 +57,14 @@ public class PanierService {
 	public void supprimerPanier(PanierItemRequest panierItemRequest) throws Exception {
 		
 		Panier panier = null;
-		productRepository.deleteById(panierItemRequest.getIdProduct());
 		panier = panierRepository.findById(panierItemRequest.getIdPanier())
 					.orElseThrow(() -> new Exception("Panier not exists"));
+		if(panier.getProducts() != null && !panier.getProducts().isEmpty()) {
+			for(Product p : panier.getProducts()) {
+				if(p.getId() == panierItemRequest.getIdProduct())
+					p.setPanier(null);
+			}
+		}
 		if(panier.getProducts().isEmpty())
 				panierRepository.deleteById(panierItemRequest.getIdPanier());
 	}
@@ -67,16 +76,33 @@ public class PanierService {
 			
 		panier = panierRepository.findById(panierItemRequest.getIdPanier())
 					.orElseThrow(() -> new Exception("Panier not exists"));
-			
-		panier.getProducts().stream().map((product) -> {
-		int quantity = product.getQuantity() + panierItemRequest.getQuantity();
-		if(product.getId() == panierItemRequest.getIdProduct() && quantity > 0) {
-				product.setQuantity(quantity);
-		}
-			return product;
-		});
+		List<Product> products = productRepository.findByPanier(panier);
+		if(products.isEmpty())
+			throw new Exception("Panier vide, le produit n'est pas dans le panier");
 		
-		return panierRepository.saveAndFlush(panier);
+		productRepository.saveAll(products.stream().map(p -> {
+			int quantity = p.getQuantity() + panierItemRequest.getQuantity();
+			if(p.getId() == panierItemRequest.getIdProduct() && quantity > 0) {
+					p.setQuantity(quantity);
+			}
+				return p;
+			}).toList());
+		
+		return panier;
 		
 	}
+	
+	@Transactional
+	public Panier creerPanier() throws Exception {
+		
+		return panierRepository.save(new Panier());
+	}
+	
+	@Transactional
+	public Panier getPanier(Integer idPanier) throws Exception {
+		
+		return panierRepository.findById(idPanier)
+				.orElseThrow(() -> new Exception("Panier not exists"));
+	}
 }
+	
